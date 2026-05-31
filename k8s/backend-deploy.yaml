@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend-deployment
+  labels:
+    app: voting-backend
+spec:
+  replicas: 2 # DevOps Mindset: Kita nyalain 2 kontainer sekaligus buat cadangan!
+  selector:
+    matchLabels:
+      app: voting-backend
+  template:
+    metadata:
+      labels:
+        app: voting-backend
+    spec:
+      containers:
+      - name: backend-container
+        image: voting-backend:v1 # Menggunakan image lokal yang kamu build tadi
+        imagePullPolicy: Never # PENTING! Kasih tahu K8s buat pakai image di laptop, jangan nyari ke internet
+        ports:
+        - containerPort: 5000
+        env:
+        - name: APP_ENV
+          value: "Production-K8s" # Kita ubah env-nya biar tahu kalau ini jalan di K8s
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend-service
+spec:
+  type: NodePort # Membuat port-nya bisa diakses dari luar klaster Minikube
+  selector:
+    app: voting-backend
+  ports:
+  - port: 5000      # Port internal si service
+    targetPort: 5000  # Menembak ke port 5000 milik kontainer
+    nodePort: 30005   # Kita kunci di port 30005 laptop kamu untuk akses luar
